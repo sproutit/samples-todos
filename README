@@ -1,12 +1,10 @@
-== Welcome to the SproutCore Todo's Sample
+== Welcome to SproutCore Builder
 
-This is an application package for building a SproutCore Todo application.  It is designed to go along with the Todo tutorial posted on the SproutCore wiki.
-This source code is stored in GitHub with tags for the various stages of building the app.  You can check out each stage to understand the progress.
+This is an application package for building a SproutCore application.  To get
+started, edit your JavaScript application in the clients directory (we've
+already created one for you.)
 
-Also take a look at the HISTORY file in this package to see a step-by-step
-playback of what has been done.
-
-To get started, start the SproutCore Dev Server by running from this directory:
+Then, start the SproutCore Dev Server by running from this directory:
 
 sc-server
 
@@ -38,7 +36,7 @@ Here is a brief description of the various parts of the SproutCore app:
   loaded when the sproutcore server start or when you do a static build.
   If you write any custom view helpers, you can place them here.
 
-* *sc-config:* This is a config file that you can use to set various load
+* *setup.yaml:* This is a config file that you can use to set various load
   options for the clients and frameworks in your app.  The default options are
   specified in the default: group.  You can override the default for specific
   frameworks or clients by naming them.
