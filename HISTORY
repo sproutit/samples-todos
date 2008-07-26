@@ -1,5 +1,9 @@
 Changes made to the Todo application during its development:
 
+STEP 2 - ADD A MODEL
+
+- Created Task model, added basic definition
+- Setup Task fixture
 
 STEP 1 - SETUP
 
