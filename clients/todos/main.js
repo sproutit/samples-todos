@@ -28,8 +28,8 @@ function main() {
 
   // Step 3. Set the content property on your primary controller.
   // This will make your app come alive!
-
-  // TODO: Set the content property on your primary controller
-  // ex: Todos.contactsController.set('content',Todos.contacts);
-
+  var tasks = Todos.Task.collection({ orderBy: ["title"] }) ;
+  Todos.tasksController.set('content', tasks) ;
+  tasks.refresh() ;
+  
 } ;

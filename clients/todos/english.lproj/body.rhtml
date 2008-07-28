@@ -10,7 +10,13 @@
 </div>
 
 <% scroll_view :tasks_scroll_view, :outlet => true do %>
-  <%= list_view :outlet => true %>
+  <%= list_view :outlet => true,
+    :content_value_key => 'title',
+    :content_checkbox_key => 'isDone',
+    :bind => {
+      :content => "Todos.tasksController.arrangedObjects",
+      :selection => "Todos.tasksController.selection"
+    } %>
 <% end %>
 
 <div class="footer">
