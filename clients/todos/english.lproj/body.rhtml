@@ -13,6 +13,8 @@
   <%= list_view :outlet => true,
     :content_value_key => 'title',
     :content_checkbox_key => 'isDone',
+    :content_value_editable => true,
+    :can_delete_content => true,
     :bind => {
       :content => "Todos.tasksController.arrangedObjects",
       :selection => "Todos.tasksController.selection"
