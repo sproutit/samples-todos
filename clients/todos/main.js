@@ -28,8 +28,7 @@ function main() {
 
   // Step 3. Set the content property on your primary controller.
   // This will make your app come alive!
-  var tasks = Todos.Task.collection({ orderBy: ["title"] }) ;
+  var tasks = Todos.Task.findAll() ;
   Todos.tasksController.set('content', tasks) ;
-  tasks.refresh() ;
   
 } ;

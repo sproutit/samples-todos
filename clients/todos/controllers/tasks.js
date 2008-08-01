@@ -8,10 +8,10 @@ require('core');
 
   This controller manages the list of tasks you want to show in your UI.
 
-  @extends SC.CollectionController
+  @extends SC.ArrayController
   @static
 */
-Todos.tasksController = SC.CollectionController.create(
+Todos.tasksController = SC.ArrayController.create(
 /** @scope Todos.tasksController */ {
 
 }) ;
