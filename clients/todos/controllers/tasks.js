@@ -50,7 +50,40 @@ Todos.tasksController = SC.ArrayController.create(
     Calls destroy on any selected tasks and removes them from the array.
   */
   deleteTask: function() {
+
+    // get the selected tasks...
+    var tasks = this.get('selection') ;
+
+    // begin property changes.  This will avoid sending notifications to
+    // observers until we are done making changes.
+    this.beginPropertyChanges() ;
     
-  }
+    // for each task, remove from the array and call destroy on the task
+    var idx = tasks.get('length') ;
+    while(--idx >= 0) {
+      var task = tasks.objectAt(idx) ;
+      this.removeObject(task) ;
+      task.destroy() ;
+    }
+    
+    // end property changes, this will allow change notifications to go out.
+    this.endPropertyChanges() ;
+  },
+  
+  /**
+    @property
+    
+    This computed property changes to YES whenever the user has a non-empty
+    selection.  This is bound to the Delete button to enable/disable it 
+    automatically.
+    
+    Note that this property it dependent on the selection property.  This
+    means the value of this property will change whenever the selection
+    changes.
+  */
+  canDeleteTask: function() {
+    var sel = this.get('selection') ;
+    return (sel != null) && (sel.get('length') > 0) ;
+  }.property('selection') 
     
 }) ;

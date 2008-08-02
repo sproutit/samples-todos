@@ -7,7 +7,8 @@
     <%= button_view  :title => 'Add',  
         :action => 'Todos.tasksController.addTask' %>
     <%= button_view :title => 'Delete', 
-        :action => 'Todos.tasksController.deleteTask' %>
+        :action => 'Todos.tasksController.deleteTask',
+        :bind => { :enabled => 'Todos.tasksController.canDeleteTask' } %>
   </div>
 </div>
 
