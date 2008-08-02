@@ -85,3 +85,5 @@ end
 #  c[:required] = [:sproutcore, :shared]
 # end
 #
+
+proxy '/tasks', :to => 'localhost:4000'

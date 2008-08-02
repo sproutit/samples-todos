@@ -14,6 +14,8 @@ require('core');
 Todos.tasksController = SC.ArrayController.create(
 /** @scope Todos.tasksController */ {
 
+  destroyOnRemoval: YES,
+  
   /**
     Action called when the user presses the Add button.  
     
@@ -63,7 +65,6 @@ Todos.tasksController = SC.ArrayController.create(
     while(--idx >= 0) {
       var task = tasks.objectAt(idx) ;
       this.removeObject(task) ;
-      task.destroy() ;
     }
     
     // end property changes, this will allow change notifications to go out.
