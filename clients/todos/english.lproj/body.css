@@ -25,7 +25,7 @@ body.sc-theme { background: #555; }
 }
 
 
-.todos .tasks_scroll_view {
+.todos .task_list_scroll_view {
   position: absolute;
   left: 0px;
   right: 0;
