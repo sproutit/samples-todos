@@ -4,19 +4,20 @@
 <div class="header">
   <h1>Todos</h1>
   <div class="buttons">
-    <%= button_view :outlet => true, :title => 'Add' %>
-    <%= button_view :outlet => true, :title => 'Delete' %>
+    <%= button_view :title => 'Add' %>
+    <%= button_view :title => 'Delete' %>
   </div>
 </div>
 
-<% scroll_view :tasks_scroll_view, :outlet => true do %>
-  <%= list_view :outlet => true,
+<% scroll_view :task_list_scroll_view do %>
+  <%= list_view :task_list,
     :content_value_key => 'title',
     :content_checkbox_key => 'isDone',
     :bind => {
       :content => "Todos.tasksController.arrangedObjects",
       :selection => "Todos.tasksController.selection"
     } %>
+
 <% end %>
 
 <div class="footer">
