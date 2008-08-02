@@ -4,7 +4,7 @@ class Tasks < Application
   
   def index
     tasks = Task.all.map { |task| json_for_task(task) }
-    ret = { :content => tasks, :self => '/tasks' } 
+    ret = { :content => tasks, :self => '/tasks.json' } 
     display ret
   end
   
@@ -12,7 +12,7 @@ class Tasks < Application
     task_id = params[:id]
     task = Task.get(task_id) rescue nil
     raise NotFound if task.nil?
-    ret = { :content => json_for_task(task), :self => "/tasks/#{task_id}" }
+    ret = { :content => json_for_task(task), :self => "/tasks/#{task_id}.json" }
     display ret
   end
   
@@ -27,7 +27,7 @@ class Tasks < Application
     task.save
 
     # Return the location header with the new URL
-    url = headers['Location'] = "/tasks/#{task.id}"
+    url = headers['Location'] = "/tasks/#{task.id}.json"
     ret = { :content => json_for_task(task), :self => url }
     
     status = 201
@@ -37,6 +37,7 @@ class Tasks < Application
   def update
 
     json = JSON.parse(request.raw_post) rescue nil?
+    puts("JSON: #{request.raw_post}")
     json = json['content'] if json
     raise BadRequest if !json
     
@@ -49,7 +50,7 @@ class Tasks < Application
     task.save
 
     # Return the updated JSON
-    ret = { :content => json_for_task(task), :self => "/tasks/#{task_id}" }
+    ret = { :content => json_for_task(task), :self => "/tasks/#{task_id}.json" }
     display ret
   end
   
@@ -66,7 +67,7 @@ class Tasks < Application
   protected
   
   def json_for_task(task)
-    { 'guid'  => "/tasks/#{task.id}",
+    { 'guid'  => "/tasks/#{task.id}.json",
       'type' => 'Task',
       'title' => task.title,
       'order' => task.order,

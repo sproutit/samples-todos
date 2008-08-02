@@ -15,7 +15,7 @@ function main() {
   // The default code here will load the fixtures you have defined.
   // Comment out the preload line and add something to refresh from the server
   // when you are ready to pull data from your server.
-  Todos.server.preload(Todos.FIXTURES) ;
+  //Todos.server.preload(Todos.FIXTURES) ;
 
   // TODO: refresh() any collections you have created to get their records.
   // ex: Todos.contacts.refresh() ;
@@ -28,7 +28,8 @@ function main() {
 
   // Step 3. Set the content property on your primary controller.
   // This will make your app come alive!
-  var tasks = Todos.Task.findAll() ;
-  Todos.tasksController.set('content', tasks) ;
+  //var tasks = Todos.Task.findAll() ;
+  //Todos.tasksController.set('content', tasks) ;
+  Todos.serverController.loadTasks() ;
   
 } ;

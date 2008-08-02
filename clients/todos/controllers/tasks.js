@@ -27,7 +27,8 @@ Todos.tasksController = SC.ArrayController.create(
     // Create a new task, with a default title.  
     // We use newRecord() here because it will add it to the store by default.
     var task = Todos.Task.newRecord({
-      title: 'Untitled'
+      title: 'Untitled',
+      order: this.get('length')
     }) ;
     
     // Add the task to the end of the current array.  Note that we use the
@@ -85,6 +86,20 @@ Todos.tasksController = SC.ArrayController.create(
   canDeleteTask: function() {
     var sel = this.get('selection') ;
     return (sel != null) && (sel.get('length') > 0) ;
-  }.property('selection') 
+  }.property('selection'),
+  
+  
+  // whenever the array changes, make sure all the member items have the 
+  // correct order...
+  arrayContentDidChange: function() {
+    sc_super() ;
+    
+    var content = Array.from(this.get('content')) ;
+    var len = content.get('length') ;
+    for(var idx =0; idx < len; idx++) {
+      var task = content.objectAt(idx) ;
+      if (task.get('order') !== idx) task.set('order', idx) ;
+    }
+  }
     
 }) ;
