@@ -1,3 +1,5 @@
 frameworks/sproutcore
 public
 tmp
+server/todos-merb/log
+
