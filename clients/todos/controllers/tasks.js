@@ -91,7 +91,7 @@ Todos.tasksController = SC.ArrayController.create(
   
   // whenever the array changes, make sure all the member items have the 
   // correct order...
-  arrayContentDidChange: function() {
+  enumerableContentDidChange: function() {
     sc_super() ;
     
     var content = Array.from(this.get('content')) ;
