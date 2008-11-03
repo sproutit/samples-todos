@@ -8,7 +8,7 @@ require('core');
 
   This controller manages the list of tasks you want to show in your UI.
 
-  @extends SC.ArrayController
+  @extends SC.Object
   @static
 */
 Todos.serverController = SC.Object.create(
