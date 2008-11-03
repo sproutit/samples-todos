@@ -1,0 +1,34 @@
+application: sproutcore-demo
+version: 1
+runtime: python
+api_version: 1
+
+handlers:
+- url: /static/(.*)/detect-browser
+  static_files: static/\1/detect-browser
+  upload: static/(.*)/detect-browser
+  mime_type: text/javascript
+
+- url: /todos/(..)
+  static_files: static/todos/\1/index.html
+  upload: static/todos/(.*)/index.html
+  mime_type: text/html
+  
+- url: /todos
+  static_files: static/todos/en/index.html
+  upload: static/todos/index.html
+  mime_type: text/html
+
+- url: /
+  static_files: static/todos/index.html
+  upload: static/todos/index.html
+  mime_type: text/html
+  
+- url: /static
+  static_dir: static
+
+- url: /todos
+  static_dir: static/todos
+
+- url: /.*
+  script: main.py
