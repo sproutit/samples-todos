@@ -86,4 +86,4 @@ end
 # end
 #
 
-proxy '/tasks', :to => 'localhost:8080'
+proxy '/tasks', :to => 'localhost:4000'
