@@ -43,15 +43,11 @@ class ListHandler(webapp.RequestHandler):
       task_json = rec["content"]
 
       # Make sure we have all the required params
-      if task_json.has_key('title') == False:
-        task_json['title'] = '(No title)'
-        
-      if task_json.has_key('order') == False:
-        task_json['order'] = 1
+      defaults = { 'title': '(No title)', 'order': 1, 'isDone': False }
+      for key in ['title','order','isDone']:
+        if not task_json.has_key(key): task_json[key] = defaults[key]
 
-      if task_json.has_key('isDone') == False:
-        task_json['isDone'] = False
-
+      # Build Task
       task = Task(title=task_json["title"], order=task_json["order"], is_done=task_json["isDone"])
       task.put() # save
       
