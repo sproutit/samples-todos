@@ -13,6 +13,17 @@
 Todos.tasksController = SC.ArrayController.create(
 /** @scope Todos.tasksController.prototype */ {
 
-  // TODO: Add your own code here.
+  summary: function() {
+    var len = this.get('length'), sel = this.get('selection'), ret ;
+
+    if (len && len > 0) {
+      ret = len === 1 ? "1 task" : "%@ tasks".fmt(len);
+    } else ret = "No tasks";
+    
+    if (sel && sel > 0) {
+      ret = ret + " (%@ selected)".fmt(sel.get('length'));
+    }
+    return ret ;
+  }.property('length', 'selection').cacheable()
 
 }) ;

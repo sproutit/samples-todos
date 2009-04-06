@@ -37,7 +37,8 @@ Todos.mainPage = SC.Page.design({
         contentBinding: 'Todos.tasksController.arrangedObjects',
         selectionBinding: 'Todos.tasksController.selection',
         contentValueKey: "description",
-        contentCheckboxKey: "isDone"
+        contentCheckboxKey: "isDone",
+        canReorderContent: YES
       })
     }),
     
@@ -50,7 +51,7 @@ Todos.mainPage = SC.Page.design({
         layout: { centerY: 0, height: 18, left: 20, right: 20 },
         textAlign: SC.ALIGN_CENTER,
         
-        value: "Item Count"
+        valueBinding: "Todos.tasksController.summary"
       })
     })
   })
