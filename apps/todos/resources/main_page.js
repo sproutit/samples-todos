@@ -8,12 +8,13 @@
 Todos.mainPage = SC.Page.design({
 
   mainPane: SC.MainPane.design({
-    childViews: 'middleView topView bottomView'.w(),
+    childViews: 'topView middleView bottomView'.w(),
+    classNames: 'main-container',
     
-    topView: SC.ToolbarView.design({
-      layout: { top: 0, left: 0, right: 0, height: 36 },
+    topView: SC.View.design(SC.Border, {
+      layout: { top: 0, left: 0, right: 0, height: 41 },
       childViews: 'labelView addButton'.w(),
-      anchorLocation: SC.ANCHOR_TOP,
+      borderStyle: SC.BORDER_BOTTOM,
       
       labelView: SC.LabelView.design({
         layout: { centerY: 0, height: 24, left: 8, width: 200 },
@@ -23,24 +24,24 @@ Todos.mainPage = SC.Page.design({
       }),
       
       addButton: SC.ButtonView.design({
-        layout: { centerY: 0, height: 24, right: 12, width: 100 },
-        title:  "Add Task"
+        layout: { centerY: 0, height: 21, right: 8, width: 100 },
+       title:  "Add Task"
       })
     }),
     
     middleView: SC.ScrollView.design({
       hasHorizontalScroller: NO,
-      layout: { top: 36, bottom: 32, left: 0, right: 0 },
+      layout: { top: 42, bottom: 42, left: 0, right: 0 },
       backgroundColor: 'white',
 
       contentView: SC.ListView.design({
       })
     }),
     
-    bottomView: SC.ToolbarView.design({
-      layout: { bottom: 0, left: 0, right: 0, height: 32 },
+    bottomView: SC.View.design(SC.Border, {
+      layout: { bottom: 0, left: 0, right: 0, height: 41 },
       childViews: 'summaryView'.w(),
-      anchorLocation: SC.ANCHOR_BOTTOM,
+      borderStyle: SC.BORDER_TOP,
       
       summaryView: SC.LabelView.design({
         layout: { centerY: 0, height: 18, left: 20, right: 20 },
