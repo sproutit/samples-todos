@@ -39,9 +39,12 @@ Todos.mainPage = SC.Page.design({
         selectionBinding: 'Todos.tasksController.selection',
         contentValueKey: "description",
         contentCheckboxKey: "isDone",
-        canReorderContent: YES
+<<<<<<< HEAD:apps/todos/english.lproj/main_page.js
         
         rowHeight: 21
+=======
+        canReorderContent: YES
+>>>>>>> Add summary editor:apps/todos/english.lproj/main_page.js
       })
     }),
     
@@ -53,6 +56,7 @@ Todos.mainPage = SC.Page.design({
       summaryView: SC.LabelView.design({
         layout: { centerY: 0, height: 18, left: 20, right: 20 },
         textAlign: SC.ALIGN_CENTER,
+        
         valueBinding: "Todos.tasksController.summary"
       })
     })
