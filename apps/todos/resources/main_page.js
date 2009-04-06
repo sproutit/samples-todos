@@ -9,6 +9,7 @@ Todos.mainPage = SC.Page.design({
 
   mainPane: SC.MainPane.design({
     childViews: 'middleView topView bottomView'.w(),
+    classNames: 'main-container',
     
     topView: SC.ToolbarView.design({
       layout: { top: 0, left: 0, right: 0, height: 36 },
