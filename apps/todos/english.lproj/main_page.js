@@ -12,7 +12,7 @@ Todos.mainPage = SC.Page.design({
     
     topView: SC.View.design(SC.Border, {
       layout: { top: 0, left: 0, right: 0, height: 41 },
-      childViews: 'labelView addButton'.w(),
+      childViews: 'labelView addButton deleteButton'.w(),
       borderStyle: SC.BORDER_BOTTOM,
       
       labelView: SC.LabelView.design({
@@ -23,9 +23,19 @@ Todos.mainPage = SC.Page.design({
       }),
       
       addButton: SC.ButtonView.design({
+        layout: { centerY: 0, height: 21, right: 116, width: 100 },
+       title:  "Add Task",
+       target: "Todos.tasksController",
+       action: "addTask"
+      }),
+      
+      deleteButton: SC.ButtonView.design({
         layout: { centerY: 0, height: 21, right: 8, width: 100 },
-       title:  "Add Task"
+       title:  "Delete Task",
+       target: "Todos.tasksController",
+       action: "deleteTask"
       })
+      
     }),
     
     middleView: SC.ScrollView.design({
@@ -36,7 +46,7 @@ Todos.mainPage = SC.Page.design({
       contentView: SC.ListView.design({
         contentBinding: 'Todos.tasksController.arrangedObjects',
         selectionBinding: 'Todos.tasksController.selection',
-        contentValueKey: "description",
+        contentValueKey: "title",
         contentCheckboxKey: "isDone",
         canReorderContent: YES
       })
