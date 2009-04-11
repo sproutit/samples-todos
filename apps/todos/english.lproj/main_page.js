@@ -46,7 +46,7 @@ Todos.mainPage = SC.Page.design({
       contentView: SC.ListView.design({
         contentBinding: 'Todos.tasksController.arrangedObjects',
         selectionBinding: 'Todos.tasksController.selection',
-        contentValueKey: "title",
+        contentValueKey: "description",
         contentCheckboxKey: "isDone",
         canReorderContent: YES
       })
