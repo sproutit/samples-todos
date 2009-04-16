@@ -31,3 +31,5 @@ Todos = SC.Object.create(
   // TODO: Add global constants or singleton objects needed by your app here.
 
 }) ;
+var globalRef;
+//var io=merbServer.fetchRecords(Todos.store, Todos.Task) ;

@@ -29,27 +29,34 @@ Todos.tasksController = SC.ArrayController.create(
   }.property('length', 'selection').cacheable(),
   
   addTask: function() {
-   /* 
     // Create a new task, with a default title.  
     // We use newRecord() here because it will add it to the store by default.
-    var task = Todos.Task.newRecord({
-      title: 'Untitled'
-    }) ;
+    var task = Todos.store.createRecord(Todos.Task, {title: 'Untitled', "isDone":false,"order":1});
     
     // Add the task to the end of the current array.  Note that we use the
     // SC.Array method, since this is observable.
     this.pushObject(task) ;
-
+	
+	  Todos.store.commitRecords();
+    
     // Now, we need to get the item view for the new task from the list view.
     // Since the the task list has not yet had a chance to update with the new
     // content, we do this the next runloop.
 
     // Find the list view from the page.
-    var listView = SC.page.getPath('todos.taskListScrollView.taskList') ;
-    var itemView = listView.itemViewForContent(task) ;
+    //var listView = Todos.mainPage.mainPane.middleView.contentView;
+    //l=listView.get('content').length();
+    /*for (var j=0; j<l; j++){
+    	if(listView.itemViewAtContentIndex(j).get('content').get('storeKey')==task.get('storeKey')){
+    		listView.itemViewAtContentIndex(j).beginEditing();
+    	}
+    }*/
+    
+    
+//    var itemView = listView.itemViewForRecord(task) ;
 
     // Begin editing on the found itemView.
-    itemView.beginEditing() ;*/
+  //  itemView.beginEditing() ;
   },
   
   deleteTask: function() {

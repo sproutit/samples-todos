@@ -12,6 +12,7 @@
   @extends SC.DataSource
   @since SproutCore 1.0
 */
+
 SC.MerbDataSource = SC.DataSource.extend( {
 
   // ..........................................................
@@ -19,6 +20,8 @@ SC.MerbDataSource = SC.DataSource.extend( {
   // 
   
   cache:{},
+  
+  canceledStoreKeys:{},
   
   /**
      Invoked by the store whenever it needs to retrieve an array of records.
@@ -52,21 +55,8 @@ SC.MerbDataSource = SC.DataSource.extend( {
     @returns {SC.Array} result set with storeKeys.  May be sparse.
   */
   fetchRecords: function(store, recordType, params) {
-    var ret = [], dataHashes, i, storeKey;
-    
-    // only support tasks
-    if (!(recordType === Todos.Task)) {
-      return [] ;
-    }
-    var primaryKey = recordType ? recordType.prototype.primaryKey : 'guid';
-    dataHashes = this.recsFor(recordType, params);
-    c=this.get('cache');
-    for(i in dataHashes){
-      storeKey = recordType.storeKeyFor(i);
-      ret.push(storeKey);
-      c[dataHashes[i][primaryKey]]=dataHashes[i];
-    }
-    this.set('cache', c); 
+    var ret=[], dataHashes, i, storeKey;
+    this.recsFor(ret, recordType, params);
     return ret;
   },
   
@@ -74,17 +64,31 @@ SC.MerbDataSource = SC.DataSource.extend( {
     Fixture operations complete immediately so you cannot cancel them.
   */
   cancel: function(store, storeKeys) {
-    return NO;
+    var i;
+    for(i in storeKeys){
+      store.dataSourceDidCancel(storeKeys[i]);
+      this.canceledStoreKeys[storeKeys[i]]=YES;
+    }
+    return YES;
   },
   
  /**
     Update the dataHash in this._fixtures
   */
   updateRecord: function(store, storeKey) {
-    this.createRecord(store, storeKey);
+    var id         = store.idFor(storeKey),
+        dataHash   = store.readDataHash(storeKey), 
+        c=this.get('cache'),
+        ds=this;
     
-    //this.setFixtureForStoreKey(store, storeKey, store.readDataHash(storeKey));
-    //store.dataSourceDidComplete(storeKey);  
+    var request = SC.Request.create() ;
+    request = SC.Request.putUrl("tasks", dataHash) ;
+    request.set("isJSON", true);
+  	request.addObserver("response", function(r) {
+      ds.updateRecordDidComplete(r, store, storeKey, id) ;
+    });
+    request.send();
+    
     return YES ;
   },
 
@@ -99,22 +103,18 @@ SC.MerbDataSource = SC.DataSource.extend( {
   */
   createRecord: function(store, storeKey) {
     var id         = store.idFor(storeKey),
-        recordType = store.recordTypeFor(storeKey),
         dataHash   = store.readDataHash(storeKey), 
-        c=this.get('cache');
-    
-    var request = SC.Request.create() ;
-    request.set('address', address) ;
-  	request.set('type', 'PUT') ;
-  	request.set('body', dataHash.toString()) ;
-  	request.set("isAsynchronous", false);
+        c=this.get('cache'),
+        ds=this, request, obj;
+    obj = {"content":dataHash};
+    request = SC.Request.create() ;
+    request = SC.Request.postUrl("tasks", SC.json.encode(obj)) ;
     request.set("isJSON", true);
+  	request.addObserver("response", function(r) {
+      ds.createRecordDidComplete(r, store, storeKey, id) ;
+    });
     request.send();
     
-    if (!id) id = this.generateIdFor(recordType, dataHash, store, storeKey);
-    c[id] = dataHash;
-
-    store.dataSourceDidComplete(storeKey, null, id);
     return YES ;
   },
 
@@ -127,70 +127,129 @@ SC.MerbDataSource = SC.DataSource.extend( {
   */
   destroyRecord: function(store, storeKey) {
     var id         = store.idFor(storeKey),
-        recordType = store.recordTypeFor(storeKey),
-    	c=this.get('cache');
+        c          = this.get('cache'),
+        ds=this, request;
     
     if(!id) return YES;
-  	var request = SC.Request.create() ;
-    request.set('address', id+".json") ;
-  	request.set('type', 'DELETE') ;
-  	request.set("isAsynchronous", false);
+  	request = SC.Request.create() ;
+    request = SC.Request.deleteUrl(id) ;
     request.set("isJSON", true);
+    request.addObserver("response", function(r) {
+      ds.destroyRecordDidComplete(r, store, storeKey, id);
+    });
     request.send();
 
-    contents = request.get("response");
-      
-    if (id) delete c[id];
-    
-    store.dataSourceDidDestroy(storeKey);  
     return YES ;
   },
   
   // internal
-  //	this is a rough version of this method
-  // 	params are an array of guids... per guid passed, it would
-  //	issue a request
-  // 	-params support is not neccesary for the tutorial !!
   
-  recsFor: function(recordType, params) {
-    var url, recordHashes={}, contents ,request, results, lenresults, c;
-    var primaryKey = recordType ? recordType.prototype.primaryKey : 'guid';
-    if(params && params.length>1) {
-      c=this.get('cache');
-      for(var p=0; p<params.length; p++){
-        dh=this.recsFor(recordType, [params[p]]);
-        for(j in dh){
-       		recordHashes[dh[j][primaryKey]]=dh[j];
-      	}  	
-      }
-    }else{
-      if(params === undefined || params === null || params.length==0) url = "tasks.json";
-      else url="tasks/"+params[0]+".json";
-       
+  recsFor: function(ret, recordType, params) {
+    var url, request, paramslen, ds;
+    ds=this;
+    if(params === undefined || params === null || params.length===0) {
+      url = "tasks";
       request = SC.Request.getUrl(url) ;
-      request.set("isAsynchronous", false);
       request.set("isJSON", true);
+      request.addObserver("response", function(r) {
+        ds.recsForDidComplete(r, ret, recordType, params);
+      }); 
       request.send();
-
-      contents = request.get("response");
-      results = contents.content;
-      lenresults=results.length;
-      if(!lenresults){
-      	dataHash = results;
-        id = dataHash[primaryKey];
-        if (!id) id = this.generateIdFor(recordType, dataHash); 
-        recordHashes[id] = dataHash;
-      }else{
-      	for(idx=0;idx<lenresults;idx++) {      
-        	dataHash = results[idx];
-        	id = dataHash[primaryKey];
-        	if (!id) id = this.generateIdFor(recordType, dataHash); 
-        	recordHashes[id] = dataHash;
-      	}
+      
+    }else{
+      paramslen = params.length;
+      for(var i=0; i< paramslen; i++){
+        url="tasks/"+params[0];
+        request.set("isJSON", true);
+        request.addObserver("response", function(r) {
+          ds.recsForDidComplete(r, ret, recordType, params);
+        });
+        request.send();
       }
     }
-    return recordHashes;
-  }
+    return this;
+  },
+  
+  
+  // callback methods
+ 
+  
+  recsForDidComplete: function(r, ret, recordType, params){
+    var results, lenresults, response, dataHash, idx, storeKey, storeKeys=[];
+    var primaryKey = recordType ? recordType.prototype.primaryKey : 'guid';
+    
+    response = r.response();
+    results = response.content;
+    lenresults=results.length;
+    if(!lenresults){
+    	dataHash = results;
+      storeKey = this.storeResultInCache(dataHash, recordType, primaryKey);
+      storeKeys.push(storeKey);
+    }else{
+    	for(idx=0;idx<lenresults;idx++) {      
+      	dataHash = results[idx];
+      	storeKey = this.storeResultInCache(dataHash, recordType, primaryKey);
+        storeKeys.push(storeKey);
+    	}
+    } 
+    ret.replace(0,0,storeKeys);
+  },
+  
+  createRecordDidComplete: function(r, store, storeKey, id){
+    var c=this.get('cache'), dataHash, response, results, guid;
+    dataHash = store.readDataHash(storeKey);
+    response = r.response();
+    results = response.content;
+    guid=results.guid;
+    if(guid) c[guid]=results;
+    store.dataSourceDidComplete(storeKey, results, guid);
+  },
+  
+  updateRecordDidComplete: function(r, store, storeKey, id){
+    var c=this.get('cache'), dataHash, response, results, guid;
+    dataHash = store.readDataHash(storeKey);
+    response = r.response();
+    results = response.content;
+    guid=results.guid;
+    if(guid) c[guid]=results;
+    store.dataSourceDidComplete(storeKey, results, guid);
+  },
+  
+  destroyRecordDidComplete: function(r, store, storeKey, id){
+    var c=this.get('cache');
+    if (id) delete c[id];
+    store.dataSourceDidDestroy(storeKey);
+  },
+  
+  storeResultInCache: function(dataHash, recordType, primaryKey) {
+    var id, storeKey, c;
+    c = this.get('cache');
+    id = dataHash[primaryKey];
+    storeKey = recordType.storeKeyFor(id);
+    c[dataHash[primaryKey]] = dataHash;
+    return storeKey;
+  },
+  
+  /**
+     Generates an id for the passed record type.  You can override this if 
+     needed.  The default generates a storekey and formats it as a string.
+   */
+   generateIdFor: function(recordType, dataHash, store, storeKey) {
+     return "@id%@".fmt(SC.Store.generateStoreKey());
+   },
+   
+   removedStoreKeyFromCanceledKeys : function(storeKey){
+     delete this.canceledStoreKeys[storeKey];
+   },
+   
+   removedStoreKeysFromCanceledKeys : function(storeKeys){
+     var i;
+      for(i in storeKeys){
+        delete this.canceledStoreKeys[storeKeys[i]];
+      }
+    }
+  
 });
 
 var merbServer=SC.MerbDataSource.create();
+
