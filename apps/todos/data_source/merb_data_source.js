@@ -197,28 +197,34 @@ SC.MerbDataSource = SC.DataSource.extend( {
   
   createRecordDidComplete: function(r, store, storeKey, id){
     var c=this.get('cache'), dataHash, response, results, guid;
+    if(!this.canceledStoreKeys[storeKey]) return NO;
     dataHash = store.readDataHash(storeKey);
     response = r.response();
     results = response.content;
     guid=results.guid;
     if(guid) c[guid]=results;
     store.dataSourceDidComplete(storeKey, results, guid);
+    return YES;
   },
   
   updateRecordDidComplete: function(r, store, storeKey, id){
     var c=this.get('cache'), dataHash, response, results, guid;
+    if(!this.canceledStoreKeys[storeKey]) return NO;
     dataHash = store.readDataHash(storeKey);
     response = r.response();
     results = response.content;
     guid=results.guid;
     if(guid) c[guid]=results;
     store.dataSourceDidComplete(storeKey, results, guid);
+    return YES;
   },
   
   destroyRecordDidComplete: function(r, store, storeKey, id){
     var c=this.get('cache');
+    if(!this.canceledStoreKeys[storeKey]) return NO;
     if (id) delete c[id];
     store.dataSourceDidDestroy(storeKey);
+    return YES;
   },
   
   storeResultInCache: function(dataHash, recordType, primaryKey) {
@@ -238,11 +244,11 @@ SC.MerbDataSource = SC.DataSource.extend( {
      return "@id%@".fmt(SC.Store.generateStoreKey());
    },
    
-   removedStoreKeyFromCanceledKeys : function(storeKey){
+   removedStoreKeyFromCanceled : function(storeKey){
      delete this.canceledStoreKeys[storeKey];
    },
    
-   removedStoreKeysFromCanceledKeys : function(storeKeys){
+   removedStoreKeysFromCanceled : function(storeKeys){
      var i;
       for(i in storeKeys){
         delete this.canceledStoreKeys[storeKeys[i]];
