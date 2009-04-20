@@ -24,27 +24,6 @@ SC.MerbDataSource = SC.DataSource.extend( {
   canceledStoreKeys:{},
   
   /**
-     Invoked by the store whenever it needs to retrieve an array of records.
-
-     @param {SC.Store} store the requesting store
-     @param {SC.Array} the array with the storeKeys to be retrieved
-     @returns {SC.Bool} return YES because Fixtures supports the function.  
-  */
-  retrieveRecords: function(store, storeKeys) {
-    var len = storeKeys.length, dataHash, storeKey, i, id;
-    var c=this.get('cache');
-    if(!c) return YES;
-    for(i=0; i<len; i++){
-      storeKey = storeKeys[i];
-      id = store.idFor(storeKey);
-      if(!id) continue;
-      dataHash = c[id];  
-      if (dataHash) store.dataSourceDidComplete(storeKey, dataHash);
-    }
-    return YES;    
-  },
-
-  /**
     Invoked by the store whenever it needs to retrieve an array of storeKeys
     matching a specific query.  For the fixtures params are ignored and all 
     storeKeys for the specific recordType are returned.
@@ -54,9 +33,20 @@ SC.MerbDataSource = SC.DataSource.extend( {
     @param {Hash} params optional additonal fetch params
     @returns {SC.Array} result set with storeKeys.  May be sparse.
   */
-  fetchRecords: function(store, recordType, params) {
-    var ret=[], dataHashes, i, storeKey;
-    this.recsFor(ret, recordType, params);
+  fetchRecords: function(store, fetchKey, params) {
+    
+    if (fetchKey === SC.Record.STORE_KEYS) {
+      params.forEach(function(storeKey) {
+        var recordType = SC.Store.recordTypeFor(storeKey),
+            id = recordType.idFor(storeKey);
+        // get request...
+      }, this);
+      ret = params ;
+    } else {
+      var ret = [];
+      this.recsFor(ret, fetchKey, params);
+      return ret ;
+    }
     return ret;
   },
   
@@ -64,6 +54,10 @@ SC.MerbDataSource = SC.DataSource.extend( {
     Fixture operations complete immediately so you cannot cancel them.
   */
   cancel: function(store, storeKeys) {
+    // CAJ: this is a little off.  I think a better approach here would be
+    // to keep a hash of inflight operations, sorted by storeKey.  You then
+    // cancel the Ajax request for the storeKey and remove the storeKey from
+    // the queue so that any response will simply drop on the floor
     var i;
     for(i in storeKeys){
       store.dataSourceDidCancel(storeKeys[i]);
@@ -71,8 +65,12 @@ SC.MerbDataSource = SC.DataSource.extend( {
     }
     return YES;
   },
+
+  updateRequest: SC.Request.putUrl("tasks").set('isJSON', YES),
   
  /**
+    CAJ: description looks wrong?
+    
     Update the dataHash in this._fixtures
   */
   updateRecord: function(store, storeKey) {
@@ -81,7 +79,7 @@ SC.MerbDataSource = SC.DataSource.extend( {
         c=this.get('cache'),
         ds=this;
     
-    var request = SC.Request.create() ;
+    var request  ;
     request = SC.Request.putUrl("tasks", dataHash) ;
     request.set("isJSON", true);
   	request.addObserver("response", function(r) {
@@ -89,11 +87,21 @@ SC.MerbDataSource = SC.DataSource.extend( {
     });
     request.send();
     
+    // CAJ: Request is designed to be chained.  Also there is a notify() 
+    // helper that can replace addObserver().  Looking at SC.Request is 
+    // appears notify() is not fully implemented.  Can you do that?  Here 
+    // is what this code should look like:
+    this.updateRequest.notify(this, this.updateRecordDidComplete, { 
+      store: store, storeKey: storeKey 
+    }).send(dataHash);
+      
     return YES ;
   },
 
 
   /**
+  CAJ: description looks wrong?
+  
     Adds records to this._fixtures.  If the record does not have an id yet,
     then then calls generateIdFor() and sets that.
     
@@ -107,7 +115,6 @@ SC.MerbDataSource = SC.DataSource.extend( {
         c=this.get('cache'),
         ds=this, request, obj;
     obj = {"content":dataHash};
-    request = SC.Request.create() ;
     request = SC.Request.postUrl("tasks", SC.json.encode(obj)) ;
     request.set("isJSON", true);
   	request.addObserver("response", function(r) {
