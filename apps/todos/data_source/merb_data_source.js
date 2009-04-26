@@ -19,8 +19,6 @@ SC.MerbDataSource = SC.DataSource.extend( {
   // STANDARD DATA SOURCE METHODS
   // 
   
-  cache:{},
-  
   canceledStoreKeys:{},
   
   /**
@@ -75,18 +73,16 @@ SC.MerbDataSource = SC.DataSource.extend( {
   */
   updateRecord: function(store, storeKey) {
     var id         = store.idFor(storeKey),
-        dataHash   = store.readDataHash(storeKey), 
-        c=this.get('cache'),
-        ds=this;
-    
-    var request  ;
-    request = SC.Request.putUrl("tasks", dataHash) ;
-    request.set("isJSON", true);
-  	request.addObserver("response", function(r) {
-      ds.updateRecordDidComplete(r, store, storeKey, id) ;
-    });
-    request.send();
-    
+        dataHash   = store.readDataHash(storeKey);
+        
+    // var request  ;
+    //     request = SC.Request.putUrl("tasks", dataHash) ;
+    //     request.set("isJSON", true);
+    //    request.addObserver("response", function(r) {
+    //       ds.updateRecordDidComplete(r, store, storeKey, id) ;
+    //     });
+    //     request.send();
+    //     
     // CAJ: Request is designed to be chained.  Also there is a notify() 
     // helper that can replace addObserver().  Looking at SC.Request is 
     // appears notify() is not fully implemented.  Can you do that?  Here 
@@ -99,6 +95,8 @@ SC.MerbDataSource = SC.DataSource.extend( {
   },
 
 
+  createRequest: SC.Request.postUrl("tasks").set('isJSON', YES),
+  
   /**
   CAJ: description looks wrong?
   
@@ -110,21 +108,18 @@ SC.MerbDataSource = SC.DataSource.extend( {
     @returns {Boolean} YES if successful
   */
   createRecord: function(store, storeKey) {
-    var id         = store.idFor(storeKey),
-        dataHash   = store.readDataHash(storeKey), 
-        c=this.get('cache'),
-        ds=this, request, obj;
+    var dataHash   = store.readDataHash(storeKey), 
+        obj;
+        
     obj = {"content":dataHash};
-    request = SC.Request.postUrl("tasks", SC.json.encode(obj)) ;
-    request.set("isJSON", true);
-  	request.addObserver("response", function(r) {
-      ds.createRecordDidComplete(r, store, storeKey, id) ;
-    });
-    request.send();
+    this.createRequest.notify(this, this.createRecordDidComplete, { 
+      store: store, storeKey: storeKey 
+    }).send(obj);
     
     return YES ;
   },
 
+  destroyRequest: SC.Request.deleteUrl("").set('isJSON', YES),
   /**
     Removes the data from the fixtures.  
     
@@ -133,19 +128,14 @@ SC.MerbDataSource = SC.DataSource.extend( {
     @returns {Boolean} YES if successful
   */
   destroyRecord: function(store, storeKey) {
-    var id         = store.idFor(storeKey),
-        c          = this.get('cache'),
-        ds=this, request;
-    
+    var id         = store.idFor(storeKey);
+        
     if(!id) return YES;
-  	request = SC.Request.create() ;
-    request = SC.Request.deleteUrl(id) ;
-    request.set("isJSON", true);
-    request.addObserver("response", function(r) {
-      ds.destroyRecordDidComplete(r, store, storeKey, id);
-    });
-    request.send();
-
+  	this.destroyRequest.set('address',id) ;
+    this.destroyRequest.notify(this, this.destroyRecordDidComplete, { 
+      store: store, storeKey: storeKey 
+    }).send();
+    
     return YES ;
   },
   

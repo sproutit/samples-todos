@@ -24,9 +24,9 @@ Todos = SC.Object.create(
   // to any fixtures you define.
   
   
-  store: SC.Store.create().from(merbServer)
+  // store: SC.Store.create().from(merbServer)
   
-  //store: SC.Store.create().from(SC.Record.fixtures)
+  store: SC.Store.create().from(SC.Record.fixtures)
   
   // TODO: Add global constants or singleton objects needed by your app here.
 
