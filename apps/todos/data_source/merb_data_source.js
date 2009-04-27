@@ -19,7 +19,10 @@ SC.MerbDataSource = SC.DataSource.extend( {
   // STANDARD DATA SOURCE METHODS
   // 
   
-  canceledStoreKeys:{},
+  requestCounter:0,
+  cancelStoreKeys:{},
+
+  fetchRequest: SC.Request.getUrl("").set('isJSON', YES),
   
   /**
     Invoked by the store whenever it needs to retrieve an array of storeKeys
@@ -32,100 +35,103 @@ SC.MerbDataSource = SC.DataSource.extend( {
     @returns {SC.Array} result set with storeKeys.  May be sparse.
   */
   fetchRecords: function(store, fetchKey, params) {
-    
+
+    var ret = [], url;
     if (fetchKey === SC.Record.STORE_KEYS) {
       params.forEach(function(storeKey) {
         var recordType = SC.Store.recordTypeFor(storeKey),
             id = recordType.idFor(storeKey);
-        // get request...
+        url='tasks/'+id;
+        this.fetchRequest.set('address', url);
+        this.fetchRequest.notify(this, this.fetchRecordDidComplete, { 
+          store: store, fetchKey: fetchKey , storeKey: storeKey, id:id
+        }).send();
+        this.cancelStoreKeys[this.generateRequestId(storeKey)]=this.fetchRequest;
       }, this);
       ret = params ;
     } else {
-      var ret = [];
-      this.recsFor(ret, fetchKey, params);
-      return ret ;
+      url='tasks';
+      this.fetchRequest.set('address', url);
+      this.fetchRequest.notify(this, this.fetchAllRecordsDidComplete, { 
+        store: store, fetchKey: fetchKey , storeKeyArray: ret
+      }).send();
     }
     return ret;
   },
   
   /**
-    Fixture operations complete immediately so you cannot cancel them.
+    Removes the request from the queue if it is cancelled.
+    
+    @param {SC.Store} store the store
+    @param {Number} storeKey the store key
+    @returns {Boolean} YES if supported
   */
   cancel: function(store, storeKeys) {
-    // CAJ: this is a little off.  I think a better approach here would be
-    // to keep a hash of inflight operations, sorted by storeKey.  You then
-    // cancel the Ajax request for the storeKey and remove the storeKey from
-    // the queue so that any response will simply drop on the floor
-    var i;
-    for(i in storeKeys){
-      store.dataSourceDidCancel(storeKeys[i]);
-      this.canceledStoreKeys[storeKeys[i]]=YES;
+    // TODO: The request manager should have methods to cancel request that are 
+    // in the queue or are being procesed, instead of accesing directly the queue
+    // In case that a connection hangs there is no option to abort it.
+    var i, j;
+    for (i in storeKeys) {
+      for (j in this.cancelStoreKeys) {
+        if (i.indexOf(j) != -1) {
+          SC.Request.manager.get('queue').removeObject(this.cancelStoreKeys[j]);
+          this.cancelStoreKeys[j]=null;
+        }
+      }
     }
     return YES;
   },
 
+ 
+  createRequest: SC.Request.postUrl("tasks").set('isJSON', YES),
+  /**
+    Issues a request to create a record using the hash corresponding to the
+    storeKey
+    
+    @param {SC.Store} store the store
+    @param {Number} storeKey the store key
+    @returns {Boolean} YES if supported
+  */
+  createRecord: function(store, storeKey) {
+    debugger;
+    var dataHash   = store.readDataHash(storeKey), 
+        obj={"content":dataHash};
+    this.createRequest.notify(this, this.createRecordDidComplete, { 
+      store: store, storeKey: storeKey 
+    }).send(SC.json.encode(obj));
+    this.cancelStoreKeys[this.generateRequestId(storeKey)]=this.createRequest;
+    return YES ;
+  },
   updateRequest: SC.Request.putUrl("tasks").set('isJSON', YES),
   
  /**
-    CAJ: description looks wrong?
+    Issues a request to update the record corresponding to the storeKey.
     
-    Update the dataHash in this._fixtures
+    @param {SC.Store} store the store
+    @param {Number} storeKey the store key
+    @returns {Boolean} YES if supported
   */
   updateRecord: function(store, storeKey) {
     var id         = store.idFor(storeKey),
         dataHash   = store.readDataHash(storeKey);
         
-    // var request  ;
-    //     request = SC.Request.putUrl("tasks", dataHash) ;
-    //     request.set("isJSON", true);
-    //    request.addObserver("response", function(r) {
-    //       ds.updateRecordDidComplete(r, store, storeKey, id) ;
-    //     });
-    //     request.send();
-    //     
-    // CAJ: Request is designed to be chained.  Also there is a notify() 
-    // helper that can replace addObserver().  Looking at SC.Request is 
-    // appears notify() is not fully implemented.  Can you do that?  Here 
-    // is what this code should look like:
     this.updateRequest.notify(this, this.updateRecordDidComplete, { 
-      store: store, storeKey: storeKey 
-    }).send(dataHash);
-      
+      store: store, storeKey: storeKey, id:id
+    }).send(SC.json.encode(dataHash));
+    this.cancelStoreKeys[this.generateRequestId(storeKey)]=this.updateRequest;  
     return YES ;
   },
 
 
-  createRequest: SC.Request.postUrl("tasks").set('isJSON', YES),
   
-  /**
-  CAJ: description looks wrong?
   
-    Adds records to this._fixtures.  If the record does not have an id yet,
-    then then calls generateIdFor() and sets that.
-    
-    @param {SC.Store} store the store
-    @param {Number} storeKey the store key
-    @returns {Boolean} YES if successful
-  */
-  createRecord: function(store, storeKey) {
-    var dataHash   = store.readDataHash(storeKey), 
-        obj;
-        
-    obj = {"content":dataHash};
-    this.createRequest.notify(this, this.createRecordDidComplete, { 
-      store: store, storeKey: storeKey 
-    }).send(obj);
-    
-    return YES ;
-  },
-
   destroyRequest: SC.Request.deleteUrl("").set('isJSON', YES),
   /**
-    Removes the data from the fixtures.  
+    Issues a request to delete the record corresponding to the storeKey
     
     @param {SC.Store} store the store
     @param {Number} storeKey the store key
-    @returns {Boolean} YES if successful
+    @returns {Boolean} YES if supported
   */
   destroyRecord: function(store, storeKey) {
     var id         = store.idFor(storeKey);
@@ -135,103 +141,109 @@ SC.MerbDataSource = SC.DataSource.extend( {
     this.destroyRequest.notify(this, this.destroyRecordDidComplete, { 
       store: store, storeKey: storeKey 
     }).send();
-    
+    this.cancelStoreKeys[this.generateRequestId(storeKey)]=this.destroyRequest;
     return YES ;
-  },
-  
-  // internal
-  
-  recsFor: function(ret, recordType, params) {
-    var url, request, paramslen, ds;
-    ds=this;
-    if(params === undefined || params === null || params.length===0) {
-      url = "tasks";
-      request = SC.Request.getUrl(url) ;
-      request.set("isJSON", true);
-      request.addObserver("response", function(r) {
-        ds.recsForDidComplete(r, ret, recordType, params);
-      }); 
-      request.send();
-      
-    }else{
-      paramslen = params.length;
-      for(var i=0; i< paramslen; i++){
-        url="tasks/"+params[0];
-        request.set("isJSON", true);
-        request.addObserver("response", function(r) {
-          ds.recsForDidComplete(r, ret, recordType, params);
-        });
-        request.send();
-      }
-    }
-    return this;
-  },
-  
+  }, 
   
   // callback methods
- 
   
-  recsForDidComplete: function(r, ret, recordType, params){
-    var results, lenresults, response, dataHash, idx, storeKey, storeKeys=[];
-    var primaryKey = recordType ? recordType.prototype.primaryKey : 'guid';
+  /**
+    Once the fetch request commint from store.retrieveRecords()
+    is completed it handles the response and updates the store
     
+    @param {SC.Request} fetch request
+    @param {Object} hash with parameters {params.storeKey, params.store}
+    @returns {Boolean} YES 
+  */
+ 
+  fetchRecordDidComplete: function(r,params) {
+    var response, results, dataHash, storeKeys = [], hashes = [];
+    response = r.response();
+    results = response.content;
+    dataHash = results;
+    hashes.push(dataHash);
+    storeKeys.push(params.storeKey);
+    params.store.dataSourceDidComplete(params.storeKey, dataHash, params.id);    
+    params.storeKeyArray.replace(0,0,storeKeys);  
+    return YES;
+  },
+  
+  
+  /**
+    Once the fetch request comming from store.findAll()
+    is completed it handles the response and updates the store
+    
+    @param {SC.Request} fetch request
+    @param {Object} hash with parameters {params.store}
+    @returns {Boolean} YES 
+  */
+  fetchAllRecordsDidComplete: function(r,params) {
+    var hashes= [], storeKeys= [], dataHash, store, fetchKey, ret, primaryKey,
+    response, results, lenresults, idx;
+    fetchKey = params.fetchKey;
+    primaryKey = fetchKey ? fetchKey.prototype.primaryKey : 'guid';
     response = r.response();
     results = response.content;
     lenresults=results.length;
-    if(!lenresults){
-    	dataHash = results;
-      storeKey = this.storeResultInCache(dataHash, recordType, primaryKey);
-      storeKeys.push(storeKey);
-    }else{
-    	for(idx=0;idx<lenresults;idx++) {      
-      	dataHash = results[idx];
-      	storeKey = this.storeResultInCache(dataHash, recordType, primaryKey);
-        storeKeys.push(storeKey);
-    	}
+    for(idx=0;idx<lenresults;idx++) {      
+      dataHash = results[idx];
+      hashes.push(dataHash); 
     } 
-    ret.replace(0,0,storeKeys);
+    storeKeys = params.store.loadRecords(fetchKey, hashes);
+    params.storeKeyArray.replace(0,0,storeKeys);
+    //TODO: add error handling
+    return YES;
   },
   
-  createRecordDidComplete: function(r, store, storeKey, id){
-    var c=this.get('cache'), dataHash, response, results, guid;
-    if(!this.canceledStoreKeys[storeKey]) return NO;
-    dataHash = store.readDataHash(storeKey);
+  
+  /**
+    Once the create request is completed it handles the response and updates the store
+    
+    @param {SC.Request} fetch request
+    @param {Object} hash with parameters {params.storeKey, params.store}
+    @returns {Boolean} YES 
+  */
+  
+  createRecordDidComplete: function(r, params){
+    var dataHash, response, results, guid;
+    dataHash = params.store.readDataHash(params.storeKey);
     response = r.response();
     results = response.content;
     guid=results.guid;
-    if(guid) c[guid]=results;
-    store.dataSourceDidComplete(storeKey, results, guid);
+    params.store.dataSourceDidComplete(params.storeKey, results, guid);
     return YES;
   },
   
-  updateRecordDidComplete: function(r, store, storeKey, id){
-    var c=this.get('cache'), dataHash, response, results, guid;
-    if(!this.canceledStoreKeys[storeKey]) return NO;
-    dataHash = store.readDataHash(storeKey);
+  
+  /**
+    Once the update request is completed it handles the response and updates the store
+    
+    @param {SC.Request} destroy request
+    @param {Object} hash with parameters {params.storeKey, params.store, params.id}
+    @returns {Boolean} YES 
+  */
+  updateRecordDidComplete: function(r, params){
+    var dataHash, response, results;
+    dataHash = params.store.readDataHash(params.storeKey);
     response = r.response();
     results = response.content;
-    guid=results.guid;
-    if(guid) c[guid]=results;
-    store.dataSourceDidComplete(storeKey, results, guid);
+    params.store.dataSourceDidComplete(params.storeKey, results, params.id);
     return YES;
   },
   
-  destroyRecordDidComplete: function(r, store, storeKey, id){
-    var c=this.get('cache');
-    if(!this.canceledStoreKeys[storeKey]) return NO;
-    if (id) delete c[id];
-    store.dataSourceDidDestroy(storeKey);
+  
+  /**
+    Once the destroy request is completed it handles the response and updates the store
+    
+    @param {SC.Request} destroy request
+    @param {Object} hash with parameters {params.storeKey, params.store}
+    @returns {Boolean} YES 
+  */
+  destroyRecordDidComplete: function(r, params){
+    params.store.dataSourceDidDestroy(params.storeKey);
     return YES;
   },
   
-  storeResultInCache: function(dataHash, recordType, primaryKey) {
-    var id, storeKey, c;
-    c = this.get('cache');
-    id = dataHash[primaryKey];
-    storeKey = recordType.storeKeyFor(id);
-    c[dataHash[primaryKey]] = dataHash;
-    return storeKey;
-  },
   
   /**
      Generates an id for the passed record type.  You can override this if 
@@ -241,16 +253,12 @@ SC.MerbDataSource = SC.DataSource.extend( {
      return "@id%@".fmt(SC.Store.generateStoreKey());
    },
    
-   removedStoreKeyFromCanceled : function(storeKey){
-     delete this.canceledStoreKeys[storeKey];
-   },
    
-   removedStoreKeysFromCanceled : function(storeKeys){
-     var i;
-      for(i in storeKeys){
-        delete this.canceledStoreKeys[storeKeys[i]];
-      }
-    }
+   generateRequestId: function(storeKey){
+     this.requestCounter++;
+     return storeKey+"_"+this.requestCounter;
+   }
+   
   
 });
 

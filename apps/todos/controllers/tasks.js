@@ -36,7 +36,7 @@ Todos.tasksController = SC.ArrayController.create(
     // Add the task to the end of the current array.  Note that we use the
     // SC.Array method, since this is observable.
     this.pushObject(task) ;
-	
+    debugger;
 	  Todos.store.commitRecords();
     
     // Now, we need to get the item view for the new task from the list view.
