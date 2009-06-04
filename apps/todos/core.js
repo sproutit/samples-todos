@@ -24,12 +24,10 @@ Todos = SC.Object.create(
   // to any fixtures you define.
   
   
-  store: SC.Store.create().from(merbServer)
+  store: SC.Store.create().from(SC.MerbDataSource.create())
   
   //store: SC.Store.create().from(SC.Record.fixtures)
   
   // TODO: Add global constants or singleton objects needed by your app here.
 
 }) ;
-var globalRef;
-//var io=merbServer.fetchRecords(Todos.store, Todos.Task) ;

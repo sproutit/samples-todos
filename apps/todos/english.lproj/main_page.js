@@ -48,7 +48,9 @@ Todos.mainPage = SC.Page.design({
         selectionBinding: 'Todos.tasksController.selection',
         contentValueKey: "title",
         contentCheckboxKey: "isDone",
-        canReorderContent: YES
+        canReorderContent: YES,
+        canDeleteContent:YES,
+        contentValueIsEditable: YES
       })
     }),
     
