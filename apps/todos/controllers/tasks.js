@@ -27,32 +27,22 @@ Todos.tasksController = SC.ArrayController.create(
     }
     return ret ;
   }.property('length', 'selection').cacheable(),
-  
-  addTask: function() {
-     var pane = SC.DialogPane.info("Set the name for your new task", 
-          "here goes the field", '', "Add Task", "Cancel", this);      
-      return YES;
-  },
-  
-  dialogPaneDidAdd: function(name){
-    var task = Todos.store.createRecord(Todos.Task, {title: name, "isDone":false,"order":1});
-    
+     
+  addTask: function(){
+    var task, list, listItem;
+    task = Todos.store.createRecord(Todos.Task, {title: "new task", "isDone":false,"order":1});
     this.pushObject(task) ;
-    Todos.store.commitRecords();
+    list = Todos.mainPage.mainPane.middleView.contentView;
+    listItem = list.itemViewForContentIndex(list.length-1);
+    if(listItem){
+      listItem.invokeLater(listItem.beginEditing,200) ; 
+    }
     return YES;
   },
   
-  deleteTask: function() {
-  
-  	//get the selected tasks
-  	var sel= this.get('selection');
-  	var store=Todos.get('store');
-	//pass the guids to be destroyed
-  	store.destroyRecords(Todos.Task, sel.get('guid'));
-  	//commit the operation to send the request to the server
-  	store.commitRecords();
+  afterDelete: function(){
+    console.log('commit');
   }
   
   
-
 }) ;

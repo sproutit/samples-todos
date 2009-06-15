@@ -24,7 +24,7 @@ Todos = SC.Object.create(
   // to any fixtures you define.
   
   
-  store: SC.Store.create().from(SC.MerbDataSource.create())
+  store: SC.Store.create().from(SC.MerbDataSource.create({ commitRecordsAutomatically: YES }))
   
   //store: SC.Store.create().from(SC.Record.fixtures)
   

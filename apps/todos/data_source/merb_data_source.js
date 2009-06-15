@@ -133,7 +133,7 @@ SC.MerbDataSource = SC.DataSource.extend( {
     return YES ;
   },
   
-  updateRequest: SC.Request.putUrl("tasks").set('isJSON', YES),
+  updateRequest: SC.Request.putUrl("").set('isJSON', YES),
   
   
  /**
@@ -145,13 +145,16 @@ SC.MerbDataSource = SC.DataSource.extend( {
   */
   updateRecord: function(store, storeKey) {
     var id         = store.idFor(storeKey),
-        dataHash   = store.readDataHash(storeKey);
+        dataHash   = store.readDataHash(storeKey),
+        obj={"content":dataHash};
+        
+    this.updateRequest.set('address',id) ;
         
     this.updateRequest.notify(this, this.updateRecordDidComplete, 
       { 
         store: store, storeKey: storeKey, id:id
       }
-    ).send(dataHash);
+    ).send(obj);
     
     this.cancelStoreKeys[storeKey]=[].push(this.fetchRequest);
     return YES ;
