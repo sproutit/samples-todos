@@ -21,7 +21,8 @@ SC.MerbDataSource = SC.DataSource.extend( {
   
   requestCounter:0,
   cancelStoreKeys:{},
-
+  arrayDelegate: null,
+  
   
   /**
     Invoked by the store whenever it needs to retrieve an array of storeKeys
@@ -34,19 +35,30 @@ SC.MerbDataSource = SC.DataSource.extend( {
     @returns {SC.Array} result set with storeKeys.  May be sparse.
   */
   fetch: function(store, fetchKey, params) {
-    var ret = [], url;
+    var ret = null;
+    if(!params.sparseArray) {
+      ret = SC.SparseArray.array();
+      ret.set('rangeWindowSize', 1);
+    }
+    else ret = params.sparseArray;
+    ret.delegate = this.arrayDelegate; 
+    var url;
     var action={};
-    var r = SC.Request.getUrl("tasks").set('isJSON', YES);
+    var r= SC.Request.getUrl("tasks").set('isJSON', YES);
+    r.set('address', 'tasks?from='+params.start+'&length='+params.length);
     r.notify(this, this.fetchDidComplete,
       { 
         store: store, 
         fetchKey: fetchKey , 
-        storeKeyArray: ret
+        storeKeyArray: ret,
+        start: params.start,
+        length: params.length
       }
     ).send();
     
     return ret;
   },
+  
   
   
   /**
@@ -65,7 +77,6 @@ SC.MerbDataSource = SC.DataSource.extend( {
         id = recordType.idFor(storeKey);
     url='tasks/'+id;
     var r = SC.Request.getUrl(url).set('isJSON', YES);
-  
     r.notify(this, this.retrieveRecordDidComplete, 
         { store: store, storeKey: storeKey,id:id }
     ).send();
@@ -130,7 +141,7 @@ SC.MerbDataSource = SC.DataSource.extend( {
     this.cancelStoreKeys[storeKey]=[].push(r);
     return YES ;
   },
-    
+  
   
  /**
     Issues a request to update the record corresponding to the storeKey.
@@ -165,10 +176,8 @@ SC.MerbDataSource = SC.DataSource.extend( {
   */
   destroyRecord: function(store, storeKey) {
     var id = store.idFor(storeKey);
-    var r = SC.Request.deleteUrl("").set('isJSON', YES),
-        
     if(!id) return YES;
-  	r.set('address',id) ;
+  	var r = SC.Request.deleteUrl(id).set('isJSON', YES);
     r.notify(this, this.destroyRecordDidComplete, 
       { 
         store: store, storeKey: storeKey 
@@ -216,15 +225,20 @@ SC.MerbDataSource = SC.DataSource.extend( {
   */
   fetchDidComplete: function(r,params) {
     var hashes= [], storeKeys= [], store, fetchKey, ret, primaryKey,
-    response, results, lenresults, idx;
+    response, results, lenresults, idx, total;
     response = r.response();
     if(response.kindOf ? response.kindOf(SC.Error) : false){
      this.requestDidError(r);
     }else{
       fetchKey = params.fetchKey;
       results = response.content; 
+      total = response.total;
+      start =params.start;
+      length = params.length;
       storeKeys = params.store.loadRecords(fetchKey, results);
-      params.storeKeyArray.replace(0,0,storeKeys);
+      params.storeKeyArray.provideLength(total);
+      params.storeKeyArray.replace(start,response.content.length,storeKeys);
+      params.storeKeyArray.rangeRequestCompleted(start);
     }
     return YES;
   },
