@@ -5,3 +5,6 @@
 
 # Add initial buildfile information here
 config :all, :required => :sproutcore
+
+
+proxy '/tasks', :to => 'localhost:4000'
