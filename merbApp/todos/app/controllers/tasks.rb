@@ -2,9 +2,10 @@ class Tasks < Application
 
 only_provides :json
   def index
-    tasks = Task.all.map { |task| json_for_task(task) }
-    ret = { :content => tasks, :self => '/tasks' }
-    display ret 
+    from = params[:from]
+    range_length = params[:length]
+    tasks = Task.all(:offset => from.to_i, :limit => range_length.to_i).map { |task| json_for_task(task) }
+    ret = { :content => tasks, :self => '/tasks' , :total => Task.count }
   end
 
 def show
