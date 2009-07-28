@@ -22,9 +22,11 @@ Todos.mainPage = SC.Page.design({
         value:   'Todos'
       }),
       
-      addButton: SC.ButtonView.design({
-        layout: { centerY: 0, height: 21, right: 8, width: 100 },
-       title:  "Add Task"
+      addButton: SC.ButtonView.design({         
+        layout: { centerY: 0, height: 21, right: 10, width: 100 },         
+        title:  "Add Task",        
+        target: "Todos.tasksController",        
+        action: "addTask"       
       })
     }),
     
