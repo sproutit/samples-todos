@@ -28,7 +28,7 @@ Todos.tasksController = SC.ArrayController.create(
     task = Todos.store.createRecord(Todos.Task,
       {title: "new task", "isDone":false, "order":1});
     this.pushObject(task);
-    list = Todos.mainPage.mainPane.middleView.contentView;
+    list = Todos.mainPage.getPath('mainPane.middleView.contentView');
     listItem = list.itemViewForContentIndex(list.length-1);
     if(listItem) {
       listItem.invokeLater(listItem.beginEditing, 200);
