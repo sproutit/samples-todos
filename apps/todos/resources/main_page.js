@@ -38,7 +38,9 @@ Todos.mainPage = SC.Page.design({
         contentBinding: 'Todos.tasksController.arrangedObjects',
         selectionBinding: 'Todos.tasksController.selection',
         contentValueKey: "description",
-        contentCheckboxKey: "isDone"
+        contentCheckboxKey: "isDone",
+        
+        rowHeight: 21
       })
     }),
     
