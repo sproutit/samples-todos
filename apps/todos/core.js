@@ -10,7 +10,7 @@
   
   @extends SC.Object
 */
-Todos = SC.Object.create(
+Todos = SC.Application.create(
   /** @scope Todos.prototype */ {
 
   NAMESPACE: 'Todos',

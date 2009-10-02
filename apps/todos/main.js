@@ -23,7 +23,7 @@ Todos.main = function main() {
   // This will make your app come alive!
 
   // TODO: Set the content property on your primary controller
-  // ex: .contactsController.set('content',.contacts);
+  // ex: Todos.contactsController.set('content',Todos.contacts);
 
 } ;
 
