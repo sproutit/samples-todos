@@ -27,6 +27,8 @@ Todos.tasksController = SC.ArrayController.create(
   
   collectionViewDeleteContent: function(view, content, indexes) {
     
+    console.log('collectionViewDeleteContent: indexes=%@'.fmt(indexes));
+    
     // destroy the records
     var records = indexes.map(function(idx) {
       return this.objectAt(idx);
