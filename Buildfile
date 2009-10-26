@@ -7,4 +7,4 @@
 config :all, :required => :sproutcore
 
 
-proxy '/tasks', :to => 'localhost:4000'
+proxy '/tasks', :to => 'todos.demo.sproutcore.com'
