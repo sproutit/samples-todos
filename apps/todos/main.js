@@ -22,7 +22,8 @@ Todos.main = function main() {
   // Step 2. Set the content property on your primary controller.
   // This will make your app come alive!
   
-  var tasks = Todos.store.find(SC.TASKS_QUERY);
+  var query = SC.Query.local(Todos.Task, { orderBy: 'isDone,description' })
+  var tasks = Todos.store.find(query);
   Todos.tasksController.set('content', tasks);
 
 } ;
