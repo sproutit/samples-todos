@@ -5,8 +5,9 @@
 /*globals Todos */
 
 sc_require('models/task');
-
-Todos.TASKS_QUERY = SC.Query.local(Todos.Task, { orderBy: 'isDone,description' });
+Todos.TASKS_QUERY = SC.Query.local(Todos.Task, { 
+  orderBy: 'isDone,description' 
+});
 
 /** @class
 
